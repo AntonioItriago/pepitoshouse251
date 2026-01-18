@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pepito's House - Pedidos</title>
+    <title>Pepito's House - Menú Digital</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            /* Colores basados en el perfil de comida rápida (Pepito's House) */
-            --primary: #FFD700; /* Dorado/Amarillo Mostaza */
-            --secondary: #E31837; /* Rojo intenso */
+            --primary: #FFD700;
+            --secondary: #E31837;
             --dark: #1a1a1a;
         }
         .bg-primary { background-color: var(--primary); }
@@ -19,120 +17,144 @@
         .bg-secondary { background-color: var(--secondary); }
         .carousel-container::-webkit-scrollbar { display: none; }
         .carousel-container { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Animación para el modal */
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
 
-    <header class="bg-dark text-white p-4 sticky top-0 z-50 shadow-lg">
+    <header class="bg-black text-white p-4 sticky top-0 z-50 shadow-lg">
         <div class="container mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <img src="logo.jpg" alt="Logo" class="h-12 w-12 rounded-full border-2 border-primary">
-                <h1 class="font-bold text-xl tracking-tight">Pepito's House</h1>
+                <img src="logo.jpg" alt="Logo" class="h-10 w-10 rounded-full border border-primary">
+                <h1 class="font-bold text-lg tracking-tight">Pepito's House</h1>
             </div>
             <nav>
-                <a href="#about" onclick="toggleModal('modal-about')" class="text-sm border border-primary px-3 py-1 rounded hover:bg-primary hover:text-dark transition">Acerca de esta web</a>
+                <button onclick="toggleAbout(true)" class="text-[10px] md:text-xs border border-primary text-primary px-2 py-1 rounded hover:bg-primary hover:text-black transition">
+                    Acerca de esta web
+                </button>
             </nav>
-            <nav>
-    <a href="javascript:void(0)" onclick="document.getElementById('modal-autor').classList.remove('hidden')" class="text-xs md:text-sm border border-white px-3 py-1 rounded hover:bg-white hover:text-black transition">
-        Acerca de esta web
-    </a>
-</nav>
         </div>
     </header>
 
-    <section class="p-6 bg-primary text-dark text-center">
-        <p class="font-bold">¡Los mejores pepitos y comida rápida!</p>
-        <p class="text-sm"><i class="fas fa-map-marker-alt"></i> Barquisimeto, Venezuela</p>
-        <div class="flex justify-center gap-4 mt-2">
-            <a href="https://wa.me/584122525407" class="text-secondary"><i class="fab fa-whatsapp fa-lg"></i></a>
-            <a href="https://www.instagram.com/pepitoshouse251/" class="text-secondary"><i class="fab fa-instagram fa-lg"></i></a>
+    <section class="p-4 bg-primary text-dark text-center shadow-inner">
+        <p class="font-black italic uppercase text-sm">¡El sabor que te mueve!</p>
+        <div class="flex justify-center gap-6 mt-2 text-xs">
+            <span><i class="fab fa-whatsapp"></i> 0412-2525407</span>
+            <a href="https://www.instagram.com/pepitoshouse251/" target="_blank"><i class="fab fa-instagram"></i> @pepitoshouse251</a>
         </div>
     </section>
 
     <main id="menu-container" class="container mx-auto p-4 pb-24">
-        <div id="loading" class="text-center py-10">Cargando menú delicioso...</div>
+        <div id="loading" class="text-center py-20 text-gray-500">Cargando el menú del día...</div>
     </main>
 
-    <div id="cart-btn" class="fixed bottom-6 right-6 hidden">
-        <button onclick="openCheckout()" class="bg-secondary text-white p-4 rounded-full shadow-2xl flex items-center gap-2 animate-bounce">
-            <i class="fas fa-shopping-cart"></i>
+    <div id="cart-btn" class="fixed bottom-6 right-6 hidden z-40">
+        <button onclick="openCheckout()" class="bg-secondary text-white p-4 rounded-full shadow-2xl flex items-center gap-2 hover:scale-105 transition-transform">
+            <i class="fas fa-shopping-basket"></i>
             <span id="cart-count" class="font-bold">0</span>
         </button>
     </div>
 
-    <div id="modal-checkout" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[60] p-4 flex items-center justify-center">
-        <div class="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto p-6">
-            <h2 class="text-2xl font-bold mb-4 border-b pb-2">Tu Pedido</h2>
-            <div id="order-list" class="space-y-2 mb-4"></div>
-            
-            <div class="bg-gray-100 p-3 rounded mb-4">
-                <p class="text-xs text-gray-500 uppercase font-bold">Resumen de Costos</p>
-                <div class="flex justify-between"><span>Subtotal:</span> <span id="summary-subtotal"></span></div>
-                <div class="flex justify-between text-blue-600"><span>Envío aprox:</span> <span id="summary-delivery"></span></div>
-                <hr class="my-2">
-                <div class="flex justify-between font-bold text-lg"><span>Total:</span> <span id="summary-total-usd"></span></div>
-                <div class="text-right text-sm text-gray-600" id="summary-total-bs"></div>
-                <p class="text-[10px] mt-2 text-gray-400">Tasa BCV: <span id="current-tasa"></span> Bs/$</p>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-bold mb-1">Tu ubicación para el delivery:</label>
-                <input type="text" id="user-location" placeholder="Eje: Urb. Las Trinitarias" class="w-full border p-2 rounded">
-                <p class="text-[10px] text-gray-400 mt-1">* Se calcula en base a la distancia aproximada x 2.</p>
-            </div>
-
-            <div class="flex gap-2">
-                <button onclick="toggleModal('modal-checkout')" class="flex-1 bg-gray-300 py-2 rounded">Cerrar</button>
-                <button onclick="sendWhatsApp()" class="flex-1 bg-green-600 text-white py-2 rounded font-bold">Enviar a WhatsApp</button>
+    <div id="modal-about" class="fixed inset-0 bg-black/80 hidden z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 relative fade-in">
+            <button onclick="toggleAbout(false)" class="absolute top-4 right-4 text-gray-400 hover:text-black text-2xl">&times;</button>
+            <div class="text-center">
+                <div class="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <i class="fas fa-code text-2xl text-blue-600"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800">Antonio Itriago</h3>
+                <p class="text-blue-600 font-semibold text-sm leading-tight mt-2">
+                    Analista, Diseñador y Desarrollador de Sistemas de Información Computarizados
+                </p>
+                <div class="mt-6 pt-6 border-t border-gray-100">
+                    <p class="text-xs text-gray-400 uppercase font-bold mb-2">Contacto Directo</p>
+                    <a href="https://wa.me/584122525407" target="_blank" class="text-lg font-bold text-green-600 hover:underline">
+                        wa.me/584122525407
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="modal-about" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[60] p-4 flex items-center justify-center">
-        <div class="bg-white rounded-lg w-full max-w-sm p-6 text-center">
-            <h3 class="font-bold text-xl mb-2">Desarrollado por:</h3>
-            <p class="text-gray-700">Antonio Itriago</p>
-            <p class="text-sm text-gray-500">Analista, Diseñador y Desarrollador de Sistemas de Información Computarizados</p>
-            <hr class="my-4">
-            <p class="mb-4">Contacto Directo:</p>
-            <a href="https://wa.me/584122525407" class="text-green-600 font-bold">wa.me/584122525407</a>
-            <button onclick="toggleModal('modal-about')" class="block w-full mt-6 bg-dark text-white py-2 rounded">Cerrar</button>
+    <div id="modal-checkout" class="fixed inset-0 bg-black/60 hidden z-[60] p-4 flex items-center justify-center">
+        <div class="bg-white rounded-xl w-full max-w-md max-h-[85vh] overflow-y-auto p-6 shadow-2xl fade-in">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <i class="fas fa-receipt text-secondary"></i> Confirmar Pedido
+            </h2>
+            
+            <div id="order-list" class="space-y-3 mb-6 border-b pb-4"></div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                <div class="flex justify-between text-sm"><span>Subtotal:</span> <span id="summary-subtotal"></span></div>
+                <div class="flex justify-between text-sm text-green-600 font-medium"><span>Delivery estimado:</span> <span id="summary-delivery"></span></div>
+                <div class="mt-3 flex justify-between font-black text-xl border-t pt-2">
+                    <span>Total:</span>
+                    <div class="text-right">
+                        <div id="summary-total-usd"></div>
+                        <div id="summary-total-bs" class="text-sm font-normal text-gray-500"></div>
+                    </div>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-2 text-center italic">Tasa BCV hoy: <span id="current-tasa"></span> Bs/$</p>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Indica tu ubicación:</label>
+                <input type="text" id="user-location" placeholder="Eje: Calle 2 entre 3 y 4" class="w-full border-2 border-gray-100 p-3 rounded-lg focus:border-primary outline-none transition">
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="toggleModal('modal-checkout', false)" class="flex-1 text-gray-500 font-bold py-3 hover:bg-gray-100 rounded-lg">Volver</button>
+                <button onclick="sendWhatsApp()" class="flex-1 bg-green-500 text-white py-3 rounded-lg font-bold shadow-lg hover:bg-green-600 transition">Hacer Pedido</button>
+            </div>
         </div>
     </div>
 
     <script>
         let products = [];
         let cart = {};
-        let tasaBCV = 36.50; // Valor por defecto mientras carga
+        let tasaBCV = 36.50; // Base inicial
         const TSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRsTRhoswf3zopWO5PEusQsYdYglnUlWTX9HzFIvewpy4vED9fQbs9Z0V3EdQ-AGMGLlpmcs_LL_cP3/pub?gid=0&single=true&output=tsv';
 
-        // 1. Obtener Tasa BCV (Simulado o vía Proxy)
+        // Obtener Tasa BCV
         async function fetchTasa() {
             try {
-                // Aquí usarías tu API preferida. Ejemplo conceptual:
-                // const res = await fetch('https://pydolarve.org/api/v1/dollar?page=bcv');
-                // const data = await res.json();
-                // tasaBCV = data.monitors.bcv.price;
-                tasaBCV = 36.45; // Valor actual aproximado
-                console.log("Tasa actualizada:", tasaBCV);
-            } catch (e) { console.error("Error tasa:", e); }
+                // Se conecta a una API de referencia para obtener el promedio BCV
+                const res = await fetch('https://pydolarve.org/api/v1/dollar?page=bcv');
+                const data = await res.json();
+                if(data && data.monitors && data.monitors.usd) {
+                    tasaBCV = data.monitors.usd.price;
+                }
+            } catch (e) { console.log("Usando tasa base por error de conexión"); }
         }
 
-        // 2. Cargar datos de Google Sheets
+        // Cargar Menú de Google Sheets
         async function loadMenu() {
             try {
                 const response = await fetch(TSV_URL);
                 const text = await response.text();
-                const rows = text.split('\n').slice(1); // Ignorar cabecera
+                const rows = text.split('\n').slice(1);
 
                 products = rows.map(row => {
-                    const [id, name, price, currency, description, category] = row.split('\t');
-                    return { id, name, price: parseFloat(price), currency, description, category: category?.trim() };
-                });
+                    const columns = row.split('\t');
+                    return {
+                        id: columns[0]?.trim(),
+                        name: columns[1]?.trim(),
+                        price: parseFloat(columns[2]) || 0,
+                        currency: columns[3]?.trim(),
+                        description: columns[4]?.trim(),
+                        category: columns[5]?.trim() || 'General'
+                    };
+                }).filter(p => p.id);
 
                 renderMenu();
             } catch (e) {
-                document.getElementById('loading').innerText = "Error cargando el menú.";
+                document.getElementById('loading').innerHTML = "No se pudo cargar el menú. Revisa la conexión.";
             }
         }
 
@@ -146,17 +168,22 @@
                 const section = document.createElement('div');
                 section.className = "mb-8";
                 section.innerHTML = `
-                    <h2 class="text-xl font-bold mb-3 border-l-4 border-secondary pl-2">${cat}</h2>
-                    <div class="carousel-container flex overflow-x-auto gap-4 pb-4">
+                    <h2 class="text-lg font-black mb-4 text-dark flex items-center gap-2 uppercase tracking-widest">
+                        <span class="w-8 h-1 bg-secondary inline-block"></span>${cat}
+                    </h2>
+                    <div class="carousel-container flex overflow-x-auto gap-4 pb-4 snap-x">
                         ${products.filter(p => p.category === cat).map(p => `
-                            <div class="min-w-[200px] bg-white rounded-xl shadow p-4 flex flex-col justify-between">
-                                <div>
-                                    <h3 class="font-bold text-sm">${p.name}</h3>
-                                    <p class="text-xs text-gray-500 mb-2">${p.description || ''}</p>
+                            <div class="min-w-[260px] bg-white rounded-2xl shadow-md p-4 snap-start border border-gray-100">
+                                <div class="h-32 bg-gray-50 rounded-xl mb-3 flex items-center justify-center text-gray-300">
+                                    <i class="fas fa-hamburger fa-3x"></i>
                                 </div>
-                                <div class="flex justify-between items-center mt-2">
-                                    <span class="font-bold text-secondary">$${p.price}</span>
-                                    <button onclick="addToCart('${p.id}')" class="bg-primary text-dark px-3 py-1 rounded-full text-sm font-bold">+</button>
+                                <h3 class="font-bold text-gray-800 leading-tight h-10 overflow-hidden">${p.name}</h3>
+                                <p class="text-[11px] text-gray-400 mt-1 line-clamp-2 h-8">${p.description || 'Sin descripción'}</p>
+                                <div class="flex justify-between items-center mt-4">
+                                    <span class="font-black text-xl text-secondary">$${p.price.toFixed(2)}</span>
+                                    <button onclick="addToCart('${p.id}')" class="bg-primary text-dark h-10 w-10 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
                                 </div>
                             </div>
                         `).join('')}
@@ -166,24 +193,19 @@
             });
         }
 
-        // 3. Lógica del Carrito
         function addToCart(id) {
             cart[id] = (cart[id] || 0) + 1;
-            updateCartBtn();
-        }
-
-        function updateCartBtn() {
             const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
-            const btn = document.getElementById('cart-btn');
-            if(totalItems > 0) {
-                btn.classList.remove('hidden');
-                document.getElementById('cart-count').innerText = totalItems;
-            }
+            document.getElementById('cart-btn').classList.remove('hidden');
+            document.getElementById('cart-count').innerText = totalItems;
         }
 
-        function toggleModal(id) {
-            const m = document.getElementById(id);
-            m.classList.toggle('hidden');
+        function toggleAbout(show) {
+            document.getElementById('modal-about').classList.toggle('hidden', !show);
+        }
+
+        function toggleModal(id, show) {
+            document.getElementById(id).classList.toggle('hidden', !show);
         }
 
         function openCheckout() {
@@ -193,78 +215,64 @@
 
             Object.keys(cart).forEach(id => {
                 const p = products.find(prod => prod.id === id);
+                if(!p) return;
                 const qty = cart[id];
-                subtotal += p.price * qty;
+                const totalItem = p.price * qty;
+                subtotal += totalItem;
                 list.innerHTML += `
-                    <div class="flex justify-between text-sm">
-                        <span>${qty}x ${p.name}</span>
-                        <span>$${(p.price * qty).toFixed(2)}</span>
+                    <div class="flex justify-between items-center text-sm">
+                        <div class="flex flex-col">
+                            <span class="font-bold text-gray-700">${p.name}</span>
+                            <span class="text-xs text-gray-400">Cantidad: ${qty}</span>
+                        </div>
+                        <span class="font-semibold">$${totalItem.toFixed(2)}</span>
                     </div>
                 `;
             });
 
-            // Lógica de delivery (Distancia ficticia para el ejemplo)
-            const dist = Math.floor(Math.random() * 10) + 1; 
-            const delivery = dist * 2; 
-            const totalUsd = subtotal + delivery;
+            // Lógica de delivery: simulación de distancia * 2
+            const distSimulada = 2.5; 
+            const deliveryCost = distSimulada * 2;
+            const totalUsd = subtotal + deliveryCost;
             const totalBs = totalUsd * tasaBCV;
 
             document.getElementById('summary-subtotal').innerText = `$${subtotal.toFixed(2)}`;
-            document.getElementById('summary-delivery').innerText = `$${delivery.toFixed(2)}`;
+            document.getElementById('summary-delivery').innerText = `$${deliveryCost.toFixed(2)}`;
             document.getElementById('summary-total-usd').innerText = `$${totalUsd.toFixed(2)}`;
             document.getElementById('summary-total-bs').innerText = `Bs. ${totalBs.toLocaleString('es-VE', {minimumFractionDigits:2})}`;
             document.getElementById('current-tasa').innerText = tasaBCV.toFixed(2);
             
-            toggleModal('modal-checkout');
+            toggleModal('modal-checkout', true);
         }
 
         function sendWhatsApp() {
             const location = document.getElementById('user-location').value;
-            if(!location) return alert("Por favor ingresa tu ubicación");
+            if(!location) return alert("Por favor escribe tu dirección para el envío.");
 
-            let message = "*Nuevo Pedido - Pepito's House*%0A%0A";
+            let message = "*NUEVO PEDIDO - Pepito's House*%0A------------------------------%0A";
             Object.keys(cart).forEach(id => {
                 const p = products.find(prod => prod.id === id);
-                message += `- ${cart[id]}x ${p.name} ($${p.price * cart[id]})%0A`;
+                message += `• ${cart[id]}x ${p.name} ($${(p.price * cart[id]).toFixed(2)})%0A`;
             });
 
-            const deliveryVal = document.getElementById('summary-delivery').innerText;
+            const deliv = document.getElementById('summary-delivery').innerText;
             const totalUsd = document.getElementById('summary-total-usd').innerText;
             const totalBs = document.getElementById('summary-total-bs').innerText;
 
-            message += `%0A*Ubicación:* ${location}`;
-            message += `%0A*Delivery aprox:* ${deliveryVal}`;
-            message += `%0A*TOTAL:* ${totalUsd} (${totalBs})`;
-            message += `%0A_Tasa BCV: ${tasaBCV}_`;
+            message += `------------------------------%0A`;
+            message += `*Ubicación:* ${location}%0A`;
+            message += `*Envío:* ${deliv}%0A`;
+            message += `*TOTAL A PAGAR:* ${totalUsd} (${totalBs})%0A`;
+            message += `_Tasa BCV: ${tasaBCV}_`;
 
             window.open(`https://wa.me/584122525407?text=${message}`, '_blank');
         }
 
-        // Inicializar
-        fetchTasa();
-        loadMenu();
+        // Init
+        window.onload = () => {
+            fetchTasa();
+            loadMenu();
+        };
     </script>
-    <div id="modal-autor" class="fixed inset-0 bg-black bg-opacity-70 hidden z-[100] flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-2xl max-w-sm w-full p-6 relative">
-        <button onclick="document.getElementById('modal-autor').classList.add('hidden')" class="absolute top-2 right-3 text-gray-500 hover:text-black text-xl">&times;</button>
-        
-        <div class="text-center">
-            <h3 class="text-xl font-bold text-gray-800 mb-1">Antonio Itriago</h3>
-            <p class="text-blue-700 font-medium text-sm mb-4">Analista, Diseñador y Desarrollador de Sistemas de Información Computarizados</p>
-            
-            <div class="border-t pt-4">
-                <p class="text-gray-600 text-sm mb-2">Contacto:</p>
-                <a href="https://wa.me/584122525407" target="_blank" class="text-green-600 font-bold text-lg hover:underline">
-                    wa.me/584122525407
-                </a>
-            </div>
-        </div>
-        
-        <button onclick="document.getElementById('modal-autor').classList.add('hidden')" class="w-full mt-6 bg-gray-800 text-white py-2 rounded-md hover:bg-gray-900 transition">
-            Cerrar
-        </button>
-    </div>
-</div>
 </body>
 </html>
-
