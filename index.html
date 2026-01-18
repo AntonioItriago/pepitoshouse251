@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventas - Pepito's House 251</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #e63946; /* Rojo */
+            --secondary: #ffb703; /* Amarillo */
+            --dark: #1a1a1a;
+            --light: #f4f4f4;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--light); margin: 0; padding-top: 60px; }
+        
+        /* Header y Enlaces de Autor */
+        header { 
+            background: var(--dark); color: white; padding: 10px 20px; 
+            display: flex; justify-content: space-between; align-items: center;
+            position: fixed; top: 0; width: 100%; z-index: 1000;
+            box-sizing: border-box;
+        }
+        .logo { height: 40px; }
+        .about-link { color: var(--secondary); text-decoration: none; font-size: 0.9em; }
+
+        /* Contenido Principal */
+        .container { max-width: 1000px; margin: auto; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card h3 { margin: 0 0 10px; color: var(--dark); }
+        .price { color: var(--primary); font-weight: bold; font-size: 1.2em; }
+        .btn-add { 
+            background: var(--secondary); border: none; padding: 8px 15px; 
+            border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;
+        }
+
+        /* Modal y Carrito */
+        #cart-modal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center;
+        }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; max-width: 500px; width: 90%; }
+        
+        .footer-info { margin-top: 40px; padding: 20px; background: #eee; text-align: center; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <img src="logo.jpg" alt="Logo" class="logo">
+        <span style="margin-left: 10px; font-weight: bold;">Pepito's House 251</span>
+    </div>
+    <a href="#about" class="about-link" onclick="showAbout()">Acerca de esta web</a>
+</header>
+
+<div class="container">
+    <div id="menu-container" class="grid">
+        <p>Cargando menú...</p>
+    </div>
+</div>
+
+<div id="cart-modal">
+    <div class="modal-content">
+        <h3>Confirmar Pedido</h3>
+        <div id="cart-list"></div>
+        <hr>
+        <p id="tasa-display"></p>
+        <p><strong>Total USD:</strong> $<span id="total-usd"></span></p>
+        <p><strong>Total Bs:</strong> <span id="total-bs"></span></p>
+        <input type="text" id="ubicacion" placeholder="¿Hacia dónde es el delivery?" style="width: 100%; padding: 10px; margin: 10px 0;">
+        <button onclick="sendWhatsApp()" class="btn-add" style="background: #25d366; color: white;">Confirmar y enviar WhatsApp</button>
+        <button onclick="closeModal()" style="margin-top: 10px; border: none; background: none; color: gray; cursor: pointer;">Cancelar</button>
+    </div>
+</div>
+
+<footer class="footer-info">
+    <p><strong>Pepito's House 251</strong> | Barquisimeto, Venezuela</p>
+    <p>Contacto: <i class="fab fa-whatsapp"></i> 584122525407</p>
+    <div id="about" style="display:none; margin-top:20px; border-top: 1px solid #ccc; padding-top:10px;">
+        <p>Desarrollado por: <strong>Antonio Itriago</strong></p>
+        <p>Analista, Diseñador y Desarrollador de Sistemas</p>
+        <p>Contacto: <a href="https://wa.me/584122525407" target="_blank">wa.me/584122525407</a></p>
+    </div>
+</footer>
+
+<script>
+    const CONFIG = {
+        SHEET_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRsTRhoswf3zopWO5PEusQsYdYglnUlWTX9HzFIvewpy4vED9fQbs9Z0V3EdQ-AGMGLlpmcs_LL_cP3/pub?gid=0&single=true&output=tsv',
+        BCV_URL: 'https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=bcv', // URL de ejemplo para la API
+        KEY_LAST_BCV: 'last_bcv_rate',
+        WHATSAPP: '584122525407'
+    };
+
+    let cart = [];
+    let currentTasa = 0;
+
+    // --- SERVICIO DE TASA ---
+    async function obtenerTasaBCV() {
+        try {
+            const response = await fetch(CONFIG.BCV_URL);
+            if (!response.ok) throw new Error("Error API");
+            const data = await response.json();
+            const tasa = data.monitors.bcv.price || data.promedio;
+            localStorage.setItem(CONFIG.KEY_LAST_BCV, tasa);
+            return tasa;
+        } catch (error) {
+            const respaldo = localStorage.getItem(CONFIG.KEY_LAST_BCV);
+            return respaldo ? parseFloat(respaldo) : 0;
+        }
+    }
+
+    // --- CARGA DE DATOS (Google Sheet TSV) ---
+    async function loadMenu() {
+        const response = await fetch(CONFIG.SHEET_URL);
+        const text = await response.text();
+        const rows = text.split('\n').slice(1); // Saltar cabecera
+        
+        const container = document.getElementById('menu-container');
+        container.innerHTML = '';
+
+        rows.forEach(row => {
+            const [id, name, price, currency, description, category] = row.split('\t');
+            if(name) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <small>${category}</small>
+                    <h3>${name}</h3>
+                    <p>${description}</p>
+                    <p class="price">$${price}</p>
+                    <button class="btn-add" onclick="addToCart('${name}', ${price})">Agregar al pedido</button>
+                `;
+                container.appendChild(card);
+            }
+        });
+    }
+
+    // --- LÓGICA DEL CARRITO ---
+    function addToCart(name, price) {
+        cart.push({ name, price });
+        showModal();
+    }
+
+    async function showModal() {
+        currentTasa = await obtenerTasaBCV();
+        const modal = document.getElementById('cart-modal');
+        const list = document.getElementById('cart-list');
+        const tasaDisplay = document.getElementById('tasa-display');
+        
+        list.innerHTML = cart.map(item => `<div>${item.name} - $${item.price}</div>`).join('');
+        
+        const totalUSD = cart.reduce((sum, item) => sum + item.price, 0);
+        const totalBS = (totalUSD * currentTasa).toFixed(2);
+        
+        document.getElementById('total-usd').innerText = totalUSD.toFixed(2);
+        document.getElementById('total-bs').innerText = totalBS;
+        tasaDisplay.innerText = `Tasa del día: ${currentTasa} Bs.`;
+        
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('cart-modal').style.display = 'none';
+    }
+
+    function sendWhatsApp() {
+        const ubicacion = document.getElementById('ubicacion').value;
+        const totalUSD = document.getElementById('total-usd').innerText;
+        const totalBS = document.getElementById('total-bs').innerText;
+        
+        let mensaje = `*Nuevo Pedido - Pepito's House 251*%0A%0A`;
+        cart.forEach(item => mensaje += `- ${item.name} ($${item.price})%0A`);
+        mensaje += `%0A*Total:* $${totalUSD} / ${totalBS} Bs. (Tasa: ${currentTasa})%0A`;
+        mensaje += `*Ubicación:* ${ubicacion}%0A%0A*¿Cuál es el costo del delivery hasta acá?*`;
+        
+        window.open(`https://wa.me/${CONFIG.WHATSAPP}?text=${mensaje}`, '_blank');
+        cart = [];
+        closeModal();
+    }
+
+    function showAbout() {
+        const div = document.getElementById('about');
+        div.style.display = div.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Inicializar
+    loadMenu();
+</script>
+</body>
+</html>
