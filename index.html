@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pepito's House - Pedidos</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     
     <style>
         :root {
-            --primary: #f39c12; /* Naranja/Amarillo Pepito */
-            --secondary: #2c3e50; /* Gris Oscuro/Negro House */
+            --primary: #f39c12; 
+            --secondary: #2c3e50; 
             --accent: #e67e22;
             --light: #ecf0f1;
             --dark: #1a1a1a;
@@ -44,7 +43,6 @@
 
         .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
 
-        /* Catálogo */
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
         .product-card {
             background: white;
@@ -57,16 +55,6 @@
         .product-card .price { color: var(--accent); font-weight: bold; margin-bottom: 10px; }
         .qty-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
         .btn-qty { background: var(--primary); border: none; width: 25px; height: 25px; border-radius: 5px; cursor: pointer; color: white; }
-
-        /* Carrito y Confirmación */
-        .cart-summary {
-            background: white;
-            margin-top: 30px;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            display: none;
-        }
 
         .modal {
             display: none;
@@ -104,7 +92,7 @@
 
 <header>
     <img src="logo.jpg" alt="Pepito's House Logo" class="logo-img">
-    <a href="#about" class="about-link" onclick="toggleAbout()">Acerca de esta web</a>
+    <a href="#" class="about-link" onclick="toggleAbout()">Acerca de esta web</a>
 </header>
 
 <div class="container">
@@ -121,7 +109,7 @@
         <hr>
         <div style="margin: 15px 0;">
             <label>¿A cuántos KM estás del negocio?</label>
-            <input type="number" id="distancia" placeholder="Ej: 5" style="width: 100%; padding: 8px;">
+            <input type="number" id="distancia" placeholder="Ej: 5" style="width: 100%; padding: 8px;" oninput="recalculateTotal()">
         </div>
         <div id="final-prices" style="font-weight: bold; background: #f9f9f9; padding: 10px;"></div>
         <button class="btn-order" onclick="sendWhatsApp()">Enviar a WhatsApp</button>
@@ -154,11 +142,11 @@
 <script>
     const TSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRsTRhoswf3zopWO5PEusQsYdYglnUlWTX9HzFIvewpy4vED9fQbs9Z0V3EdQ-AGMGLlpmcs_LL_cP3/pub?gid=0&single=true&output=tsv';
     const WHATSAPP_NUM = "584122525407";
-    let tasaBCV = 344.51; // Backup
+    let tasaBCV = 344.51; 
     let products = [];
     let cart = {};
+    let subtotalUSD = 0;
 
-    // 1. Obtener Tasa BCV
     async function fetchBCV() {
         try {
             const res = await fetch('https://ve.dolarapi.com/v1/dolares/oficial');
@@ -166,12 +154,10 @@
             tasaBCV = data.promedio;
             document.getElementById('tasa-val').innerText = tasaBCV + " Bs.";
         } catch (e) {
-            console.log("Usando tasa de respaldo");
             document.getElementById('tasa-val').innerText = tasaBCV + " Bs. (Ref)";
         }
     }
 
-    // 2. Cargar Productos desde Google Sheets (TSV)
     async function loadProducts() {
         try {
             const response = await fetch(TSV_URL);
@@ -182,8 +168,9 @@
             listEl.innerHTML = '';
 
             rows.forEach(row => {
-                const [id, name, price, currency, desc, cat] = row.split('\t');
-                if(!id) return;
+                const cols = row.split('\t');
+                if(cols.length < 3) return;
+                const [id, name, price, currency, desc] = cols;
                 
                 const product = { id, name, price: parseFloat(price.replace(',','.')), currency, desc };
                 products.push(product);
@@ -192,8 +179,8 @@
                 card.className = 'product-card';
                 card.innerHTML = `
                     <h3>${name}</h3>
-                    <p style="font-size:0.7rem; color: #777;">${desc}</p>
-                    <p class="price">$${price}</p>
+                    <p style="font-size:0.7rem; color: #777;">${desc || ''}</p>
+                    <p class="price">$${product.price.toFixed(2)}</p>
                     <div class="qty-controls">
                         <button class="btn-qty" onclick="updateQty('${id}', -1)">-</button>
                         <span id="qty-${id}">0</span>
@@ -211,61 +198,62 @@
         cart[id] = (cart[id] || 0) + change;
         if(cart[id] <= 0) delete cart[id];
         
-        document.getElementById(`qty-${id}`).innerText = cart[id] || 0;
+        const qtyEl = document.getElementById(`qty-${id}`);
+        if(qtyEl) qtyEl.innerText = cart[id] || 0;
         
         let totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
         document.getElementById('floating-cart').style.display = totalItems > 0 ? 'block' : 'none';
         document.getElementById('cart-count').innerText = totalItems;
     }
 
+    function recalculateTotal() {
+        const dist = parseFloat(document.getElementById('distancia').value) || 0;
+        const deliveryUSD = dist * 2;
+        const totalUSD = subtotalUSD + deliveryUSD;
+        const totalBS = totalUSD * tasaBCV;
+
+        document.getElementById('final-prices').innerHTML = `
+            <p>Subtotal: $${subtotalUSD.toFixed(2)}</p>
+            <p>Delivery: $${deliveryUSD.toFixed(2)}</p>
+            <p style="font-size: 1.2rem; color: #2c3e50;">TOTAL: $${totalUSD.toFixed(2)}</p>
+            <p>TOTAL Bs: ${totalBS.toLocaleString('es-VE', {minimumFractionDigits: 2})} <br><small>(Tasa: ${tasaBCV})</small></p>
+        `;
+    }
+
     function openConfirm() {
         const orderDetails = document.getElementById('order-details');
         let html = '<ul>';
-        let subtotalUSD = 0;
+        subtotalUSD = 0;
 
         for(const id in cart) {
             const p = products.find(x => x.id === id);
-            const cost = p.price * cart[id];
-            subtotalUSD += cost;
-            html += `<li>${cart[id]}x ${p.name} - $${cost.toFixed(2)}</li>`;
+            if(p) {
+                const cost = p.price * cart[id];
+                subtotalUSD += cost;
+                html += `<li>${cart[id]}x ${p.name} - $${cost.toFixed(2)}</li>`;
+            }
         }
         html += '</ul>';
         orderDetails.innerHTML = html;
         
-        // Listener para recalcular con delivery
-        document.getElementById('distancia').oninput = () => {
-            const dist = parseFloat(document.getElementById('distancia').value) || 0;
-            const deliveryUSD = dist * 2;
-            const totalUSD = subtotalUSD + deliveryUSD;
-            const totalBS = totalUSD * tasaBCV;
-
-            document.getElementById('final-prices').innerHTML = `
-                <p>Delivery: $${deliveryUSD.toFixed(2)}</p>
-                <p>TOTAL: $${totalUSD.toFixed(2)}</p>
-                <p>TOTAL Bs: ${totalBS.toLocaleString('es-VE', {minimumFractionDigits: 2})} (Tasa: ${tasaBCV})</p>
-            `;
-        };
-        
         document.getElementById('confirm-modal').style.display = 'flex';
-        document.getElementById('distancia').dispatchEvent(new Event('input'));
+        recalculateTotal();
     }
 
     function sendWhatsApp() {
         const dist = parseFloat(document.getElementById('distancia').value) || 0;
         const deliveryUSD = dist * 2;
-        let subtotalUSD = 0;
         let msg = "Hola Pepito's House! Mi pedido:\n\n";
 
         for(const id in cart) {
             const p = products.find(x => x.id === id);
-            msg += `• ${cart[id]}x ${p.name} ($${(p.price * cart[id]).toFixed(2)})\n`;
-            subtotalUSD += (p.price * cart[id]);
+            if(p) msg += `• ${cart[id]}x ${p.name} ($${(p.price * cart[id]).toFixed(2)})\n`;
         }
 
         const totalUSD = subtotalUSD + deliveryUSD;
         const totalBS = totalUSD * tasaBCV;
 
-        msg += `\n🛵 Delivery: $${deliveryUSD.toFixed(2)}`;
+        msg += `\n🛵 Delivery (${dist}km): $${deliveryUSD.toFixed(2)}`;
         msg += `\n💰 *TOTAL: $${totalUSD.toFixed(2)}*`;
         msg += `\n🇻🇪 *TOTAL Bs: ${totalBS.toLocaleString('es-VE', {minimumFractionDigits: 2})}*`;
         msg += `\n(Tasa BCV: ${tasaBCV})`;
@@ -274,6 +262,7 @@
     }
 
     function closeModal() { document.getElementById('confirm-modal').style.display = 'none'; }
+    
     function toggleAbout() { 
         const el = document.getElementById('about-modal');
         el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
