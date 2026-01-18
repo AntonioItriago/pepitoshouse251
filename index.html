@@ -3,191 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ventas - Pepito's House 251</title>
+    <title>Pepito's House - Menú de Ventas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --primary: #e63946; /* Rojo */
-            --secondary: #ffb703; /* Amarillo */
+            --primary: #f59e0b; /* Amarillo tipo mostaza/comida rápida */
             --dark: #1a1a1a;
-            --light: #f4f4f4;
         }
-
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--light); margin: 0; padding-top: 60px; }
-        
-        /* Header y Enlaces de Autor */
-        header { 
-            background: var(--dark); color: white; padding: 10px 20px; 
-            display: flex; justify-content: space-between; align-items: center;
-            position: fixed; top: 0; width: 100%; z-index: 1000;
-            box-sizing: border-box;
-        }
-        .logo { height: 40px; }
-        .about-link { color: var(--secondary); text-decoration: none; font-size: 0.9em; }
-
-        /* Contenido Principal */
-        .container { max-width: 1000px; margin: auto; padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .card h3 { margin: 0 0 10px; color: var(--dark); }
-        .price { color: var(--primary); font-weight: bold; font-size: 1.2em; }
-        .btn-add { 
-            background: var(--secondary); border: none; padding: 8px 15px; 
-            border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;
-        }
-
-        /* Modal y Carrito */
-        #cart-modal { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center;
-        }
-        .modal-content { background: white; padding: 25px; border-radius: 15px; max-width: 500px; width: 90%; }
-        
-        .footer-info { margin-top: 40px; padding: 20px; background: #eee; text-align: center; }
+        .bg-primary { background-color: var(--primary); }
+        .text-primary { color: var(--primary); }
+        .btn-cart { position: fixed; bottom: 20px; right: 20px; z-index: 50; }
     </style>
 </head>
-<body>
+<body class="bg-gray-50 font-sans">
 
-<header>
-    <div>
-        <img src="logo.jpg" alt="Logo" class="logo">
-        <span style="margin-left: 10px; font-weight: bold;">Pepito's House 251</span>
+    <nav class="bg-white shadow-md p-4 sticky top-0 z-40 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <img src="logo.jpg" alt="Logo" class="h-12 w-12 rounded-full object-cover">
+            <span class="font-bold text-xl uppercase tracking-tighter">Pepito's <span class="text-primary">House</span></span>
+        </div>
+        <button onclick="toggleModal('info-modal')" class="text-xs text-gray-500 hover:underline">Acerca de esta web</button>
+    </nav>
+
+    <header class="bg-dark text-white p-8 text-center bg-black">
+        <h1 class="text-3xl font-bold mb-2">¡Pide lo mejor! 🌭</h1>
+        <p class="text-gray-400 text-sm">Selecciona tus productos y confirma por WhatsApp</p>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4 pb-24">
+        <div id="productos-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <p class="text-center col-span-full py-10">Cargando menú delicioso...</p>
+        </div>
+    </main>
+
+    <button onclick="abrirCheckout()" class="btn-cart bg-green-600 text-white p-4 rounded-full shadow-2xl flex items-center gap-2 hover:scale-105 transition">
+        <i class="fas fa-shopping-cart text-xl"></i>
+        <span id="cart-count" class="bg-white text-green-600 rounded-full px-2 py-0.5 text-xs font-bold">0</span>
+    </button>
+
+    <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 relative">
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2">Tu Pedido</h2>
+            <div id="lista-pedido" class="space-y-3 mb-6"></div>
+            
+            <div class="bg-gray-100 p-4 rounded-lg space-y-2 mb-4">
+                <p class="flex justify-between font-bold text-lg"><span>Total USD:</span> <span id="total-usd">$0.00</span></p>
+                <p class="flex justify-between text-sm text-gray-600"><span>Tasa BCV:</span> <span id="tasa-val">Cargando...</span></p>
+                <p class="flex justify-between font-bold text-xl text-primary border-t pt-2"><span>Total BS:</span> <span id="total-bs">Bs. 0.00</span></p>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-semibold mb-1">¿A dónde enviamos? (Delivery)</label>
+                <input type="text" id="ubicacion-input" placeholder="Ej: Las Mercedes, Edif X, Apto Y" class="w-full border p-2 rounded">
+                <button onclick="obtenerUbicacion()" class="text-xs text-blue-600 mt-1"><i class="fas fa-map-marker-alt"></i> Usar mi ubicación actual</button>
+            </div>
+
+            <button onclick="enviarWhatsApp()" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg flex justify-center items-center gap-2 hover:bg-green-700">
+                <i class="fab fa-whatsapp text-xl"></i> ENVIAR PEDIDO
+            </button>
+            <button onclick="toggleModal('checkout-modal')" class="w-full mt-2 text-gray-400 text-sm py-2">Seguir comprando</button>
+        </div>
     </div>
-    <a href="#about" class="about-link" onclick="showAbout()">Acerca de esta web</a>
-</header>
 
-<div class="container">
-    <div id="menu-container" class="grid">
-        <p>Cargando menú...</p>
+    <div id="info-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-xs w-full p-6 text-center">
+            <h3 class="font-bold text-lg">Antonio Itriago</h3>
+            <p class="text-sm text-gray-600 mb-4">Analista, Diseñador y Desarrollador de Sistemas de Información Computarizados</p>
+            <a href="https://wa.me/584122525407" class="text-green-600 font-bold flex items-center justify-center gap-2 border p-2 rounded-lg">
+                Contacto WhatsApp
+            </a>
+            <button onclick="toggleModal('info-modal')" class="mt-4 text-xs text-gray-400">Cerrar</button>
+        </div>
     </div>
-</div>
 
-<div id="cart-modal">
-    <div class="modal-content">
-        <h3>Confirmar Pedido</h3>
-        <div id="cart-list"></div>
-        <hr>
-        <p id="tasa-display"></p>
-        <p><strong>Total USD:</strong> $<span id="total-usd"></span></p>
-        <p><strong>Total Bs:</strong> <span id="total-bs"></span></p>
-        <input type="text" id="ubicacion" placeholder="¿Hacia dónde es el delivery?" style="width: 100%; padding: 10px; margin: 10px 0;">
-        <button onclick="sendWhatsApp()" class="btn-add" style="background: #25d366; color: white;">Confirmar y enviar WhatsApp</button>
-        <button onclick="closeModal()" style="margin-top: 10px; border: none; background: none; color: gray; cursor: pointer;">Cancelar</button>
-    </div>
-</div>
+    <script>
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRsTRhoswf3zopWO5PEusQsYdYglnUlWTX9HzFIvewpy4vED9fQbs9Z0V3EdQ-AGMGLlpmcs_LL_cP3/pub?gid=0&single=true&output=tsv';
+        const WHATSAPP_NUM = "584122525407";
+        let productos = [];
+        let carrito = [];
+        let tasaBCV = 0;
 
-<footer class="footer-info">
-    <p><strong>Pepito's House 251</strong> | Barquisimeto, Venezuela</p>
-    <p>Contacto: <i class="fab fa-whatsapp"></i> 584122525407</p>
-    <div id="about" style="display:none; margin-top:20px; border-top: 1px solid #ccc; padding-top:10px;">
-        <p>Desarrollado por: <strong>Antonio Itriago</strong></p>
-        <p>Analista, Diseñador y Desarrollador de Sistemas</p>
-        <p>Contacto: <a href="https://wa.me/584122525407" target="_blank">wa.me/584122525407</a></p>
-    </div>
-</footer>
-
-<script>
-    const CONFIG = {
-        SHEET_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRsTRhoswf3zopWO5PEusQsYdYglnUlWTX9HzFIvewpy4vED9fQbs9Z0V3EdQ-AGMGLlpmcs_LL_cP3/pub?gid=0&single=true&output=tsv',
-        BCV_URL: 'https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=bcv', // URL de ejemplo para la API
-        KEY_LAST_BCV: 'last_bcv_rate',
-        WHATSAPP: '584122525407'
-    };
-
-    let cart = [];
-    let currentTasa = 0;
-
-    // --- SERVICIO DE TASA ---
-    async function obtenerTasaBCV() {
-        try {
-            const response = await fetch(CONFIG.BCV_URL);
-            if (!response.ok) throw new Error("Error API");
-            const data = await response.json();
-            const tasa = data.monitors.bcv.price || data.promedio;
-            localStorage.setItem(CONFIG.KEY_LAST_BCV, tasa);
-            return tasa;
-        } catch (error) {
-            const respaldo = localStorage.getItem(CONFIG.KEY_LAST_BCV);
-            return respaldo ? parseFloat(respaldo) : 0;
-        }
-    }
-
-    // --- CARGA DE DATOS (Google Sheet TSV) ---
-    async function loadMenu() {
-        const response = await fetch(CONFIG.SHEET_URL);
-        const text = await response.text();
-        const rows = text.split('\n').slice(1); // Saltar cabecera
-        
-        const container = document.getElementById('menu-container');
-        container.innerHTML = '';
-
-        rows.forEach(row => {
-            const [id, name, price, currency, description, category] = row.split('\t');
-            if(name) {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <small>${category}</small>
-                    <h3>${name}</h3>
-                    <p>${description}</p>
-                    <p class="price">$${price}</p>
-                    <button class="btn-add" onclick="addToCart('${name}', ${price})">Agregar al pedido</button>
-                `;
-                container.appendChild(card);
+        // 1. Obtener Tasa BCV
+        async function getBCV() {
+            try {
+                // Usando una API pública de referencia para Venezuela
+                const res = await fetch('https://pydolarve.org/api/v1/dollar?page=bcv');
+                const data = await res.json();
+                tasaBCV = data.monitors.bcv.price;
+                document.getElementById('tasa-val').innerText = `Bs. ${tasaBCV}`;
+            } catch (e) {
+                tasaBCV = 36.50; // Fallback manual si falla la API
+                document.getElementById('tasa-val').innerText = `Bs. ${tasaBCV} (Ref)`;
             }
-        });
-    }
+        }
 
-    // --- LÓGICA DEL CARRITO ---
-    function addToCart(name, price) {
-        cart.push({ name, price });
-        showModal();
-    }
+        // 2. Cargar datos desde Google Sheets
+        async function loadMenu() {
+            const resp = await fetch(SHEET_URL);
+            const text = await resp.text();
+            const rows = text.split('\n').slice(1); // Ignorar cabecera
 
-    async function showModal() {
-        currentTasa = await obtenerTasaBCV();
-        const modal = document.getElementById('cart-modal');
-        const list = document.getElementById('cart-list');
-        const tasaDisplay = document.getElementById('tasa-display');
-        
-        list.innerHTML = cart.map(item => `<div>${item.name} - $${item.price}</div>`).join('');
-        
-        const totalUSD = cart.reduce((sum, item) => sum + item.price, 0);
-        const totalBS = (totalUSD * currentTasa).toFixed(2);
-        
-        document.getElementById('total-usd').innerText = totalUSD.toFixed(2);
-        document.getElementById('total-bs').innerText = totalBS;
-        tasaDisplay.innerText = `Tasa del día: ${currentTasa} Bs.`;
-        
-        modal.style.display = 'flex';
-    }
+            productos = rows.map(row => {
+                const [id, name, price, currency, description, category] = row.split('\t');
+                return { id, name, price: parseFloat(price), currency, description, category };
+            }).filter(p => p.name);
 
-    function closeModal() {
-        document.getElementById('cart-modal').style.display = 'none';
-    }
+            renderProductos();
+        }
 
-    function sendWhatsApp() {
-        const ubicacion = document.getElementById('ubicacion').value;
-        const totalUSD = document.getElementById('total-usd').innerText;
-        const totalBS = document.getElementById('total-bs').innerText;
-        
-        let mensaje = `*Nuevo Pedido - Pepito's House 251*%0A%0A`;
-        cart.forEach(item => mensaje += `- ${item.name} ($${item.price})%0A`);
-        mensaje += `%0A*Total:* $${totalUSD} / ${totalBS} Bs. (Tasa: ${currentTasa})%0A`;
-        mensaje += `*Ubicación:* ${ubicacion}%0A%0A*¿Cuál es el costo del delivery hasta acá?*`;
-        
-        window.open(`https://wa.me/${CONFIG.WHATSAPP}?text=${mensaje}`, '_blank');
-        cart = [];
-        closeModal();
-    }
+        function renderProductos() {
+            const grid = document.getElementById('productos-grid');
+            grid.innerHTML = productos.map(p => `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-gray-400">${p.category}</span>
+                        <h3 class="text-lg font-bold text-dark">${p.name}</h3>
+                        <p class="text-sm text-gray-500 mb-4">${p.description}</p>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xl font-bold text-dark">$${p.price.toFixed(2)}</span>
+                        <button onclick="agregarAlCarrito('${p.id}')" class="bg-primary text-white px-4 py-2 rounded-lg font-bold hover:opacity-90 active:scale-95 transition">
+                            Añadir +
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
 
-    function showAbout() {
-        const div = document.getElementById('about');
-        div.style.display = div.style.display === 'none' ? 'block' : 'none';
-    }
+        // 3. Lógica de Carrito
+        function agregarAlCarrito(id) {
+            const prod = productos.find(p => p.id === id);
+            carrito.push(prod);
+            document.getElementById('cart-count').innerText = carrito.length;
+        }
 
-    // Inicializar
-    loadMenu();
-</script>
+        function abrirCheckout() {
+            if (carrito.length === 0) return alert("Agrega al menos un pepito delicioso.");
+            
+            const lista = document.getElementById('lista-pedido');
+            let total = 0;
+            
+            // Agrupar productos repetidos
+            const counts = {};
+            carrito.forEach(p => counts[p.name] = (counts[p.name] || 0) + 1);
+
+            lista.innerHTML = Object.keys(counts).map(name => {
+                const prod = productos.find(p => p.name === name);
+                const subtotal = prod.price * counts[name];
+                total += subtotal;
+                return `<div class="flex justify-between text-sm">
+                            <span>${counts[name]}x ${name}</span>
+                            <span class="font-semibold">$${subtotal.toFixed(2)}</span>
+                        </div>`;
+            }).join('');
+
+            document.getElementById('total-usd').innerText = `$${total.toFixed(2)}`;
+            document.getElementById('total-bs').innerText = `Bs. ${(total * tasaBCV).toLocaleString('es-VE', {minimumFractionDigits:2})}`;
+            
+            toggleModal('checkout-modal');
+        }
+
+        // 4. Geolocalización
+        function obtenerUbicacion() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    document.getElementById('ubicacion-input').value = `Ubicación GPS: https://www.google.com/maps?q=${lat},${lon}`;
+                });
+            }
+        }
+
+        // 5. Enviar a WhatsApp
+        function enviarWhatsApp() {
+            const ubicacion = document.getElementById('ubicacion-input').value;
+            if(!ubicacion) return alert("Por favor indica la dirección de entrega.");
+
+            let totalUSD = 0;
+            const counts = {};
+            carrito.forEach(p => {
+                counts[p.name] = (counts[p.name] || 0) + 1;
+                totalUSD += p.price;
+            });
+
+            let mensaje = `🍔 *NUEVO PEDIDO - Pepito's House*\n\n`;
+            Object.keys(counts).forEach(name => {
+                mensaje += `• ${counts[name]}x ${name}\n`;
+            });
+            
+            mensaje += `\n💰 *Total USD:* $${totalUSD.toFixed(2)}`;
+            mensaje += `\n📈 *Tasa BCV:* Bs. ${tasaBCV}`;
+            mensaje += `\n🇻🇪 *Total BS:* Bs. ${(totalUSD * tasaBCV).toFixed(2)}`;
+            mensaje += `\n\n📍 *Dirección:* ${ubicacion}`;
+            
+            const url = `https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(mensaje)}`;
+            window.open(url, '_blank');
+        }
+
+        function toggleModal(id) {
+            document.getElementById(id).classList.toggle('hidden');
+        }
+
+        // Inicializar
+        getBCV();
+        loadMenu();
+    </script>
 </body>
 </html>
