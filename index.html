@@ -3,232 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pepito's House 251 - Ventas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Pepito's House - Pedidos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    
     <style>
         :root {
-            /* Colores extraídos visualmente del perfil (Amarillo y Negro/Rojo) */
-            --primary: #FFD700; 
-            --secondary: #E60000;
+            --primary: #f39c12; /* Naranja/Amarillo Pepito */
+            --secondary: #2c3e50; /* Gris Oscuro/Negro House */
+            --accent: #e67e22;
+            --light: #ecf0f1;
             --dark: #1a1a1a;
         }
-        .bg-primary { background-color: var(--primary); }
-        .text-primary { color: var(--primary); }
-        .border-primary { border-color: var(--primary); }
-        body { background-color: #f4f4f4; }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        body { background-color: #f4f4f4; color: var(--dark); }
+
+        header {
+            background: var(--dark);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-img { height: 50px; border-radius: 5px; }
+
+        .about-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+
+        /* Catálogo */
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .product-card h3 { font-size: 1rem; margin-bottom: 5px; }
+        .product-card .price { color: var(--accent); font-weight: bold; margin-bottom: 10px; }
+        .qty-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-qty { background: var(--primary); border: none; width: 25px; height: 25px; border-radius: 5px; cursor: pointer; color: white; }
+
+        /* Carrito y Confirmación */
+        .cart-summary {
+            background: white;
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .btn-order {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            width: 100%;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .info-section { margin-top: 20px; font-size: 0.8rem; color: #666; text-align: center; }
     </style>
 </head>
 <body>
 
-    <nav class="bg-black text-white p-4 sticky top-0 z-50 shadow-lg">
-        <div class="container mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <img src="logo.jpg" alt="Logo" class="h-12 w-12 rounded-full border-2 border-primary">
-                <span class="font-bold text-xl uppercase tracking-tighter">Pepito's House</span>
-            </div>
-            <div class="text-sm">
-                <a href="#about" class="bg-primary text-black px-3 py-1 rounded font-bold hover:bg-yellow-500 transition">Acerca de esta web</a>
-            </div>
-        </div>
-    </nav>
+<header>
+    <img src="logo.jpg" alt="Pepito's House Logo" class="logo-img">
+    <a href="#about" class="about-link" onclick="toggleAbout()">Acerca de esta web</a>
+</header>
 
-    <header class="bg-white p-6 shadow-sm border-b border-gray-200">
-        <div class="container mx-auto text-center">
-            <h1 class="text-3xl font-black italic">¡EL VERDADERO SABOR! 🌭</h1>
-            <p class="text-gray-600">Barquisimeto, Venezuela</p>
-            <div class="flex justify-center gap-4 mt-3">
-                <a href="https://wa.me/584122525407" target="_blank" class="text-green-600 text-2xl"><i class="fab fa-whatsapp"></i></a>
-                <a href="https://www.instagram.com/pepitoshouse251/" target="_blank" class="text-pink-600 text-2xl"><i class="fab fa-instagram"></i></a>
-            </div>
-        </div>
-    </header>
-
-    <main class="container mx-auto p-4 mb-24">
-        <div id="loading" class="text-center py-10 font-bold">Cargando menú delicioso...</div>
-        <div id="productos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            </div>
-    </main>
-
-    <div id="cart-bar" class="fixed bottom-0 left-0 right-0 bg-black text-white p-4 shadow-2xl transform translate-y-full transition-transform">
-        <div class="container mx-auto flex justify-between items-center">
-            <div>
-                <span id="cart-count" class="font-bold text-primary">0</span> productos seleccionados
-            </div>
-            <button onclick="openModal()" class="bg-primary text-black px-6 py-2 rounded-full font-bold">Ver Pedido</button>
-        </div>
+<div class="container">
+    <h2 style="margin-bottom: 20px;">Menú Principal</h2>
+    <div id="product-list" class="product-grid">
+        Cargando menú...
     </div>
+</div>
 
-    <div id="modal" class="fixed inset-0 bg-black bg-opacity-80 hidden z-[60] overflow-y-auto p-4">
-        <div class="bg-white rounded-lg max-w-lg mx-auto mt-10 p-6">
-            <h2 class="text-2xl font-bold mb-4 border-b pb-2">Confirmar Pedido</h2>
-            <div id="modal-items" class="space-y-2 mb-4"></div>
-            
-            <div class="bg-gray-100 p-4 rounded mb-4">
-                <label class="block text-sm font-bold mb-1">Distancia estimada para Delivery (km):</label>
-                <input type="number" id="distancia" value="1" oninput="calcularTotal()" class="w-full border p-2 rounded">
-                <p class="text-xs text-gray-500 mt-1">* Costo: $2 por km (Ida y vuelta)</p>
-            </div>
-
-            <div id="resumen-costos" class="text-right border-t pt-4">
-                </div>
-
-            <div class="mt-6 flex gap-2">
-                <button onclick="closeModal()" class="flex-1 bg-gray-300 py-3 rounded font-bold">Cerrar</button>
-                <button onclick="enviarWhatsApp()" class="flex-1 bg-green-600 text-white py-3 rounded font-bold flex items-center justify-center gap-2">
-                    <i class="fab fa-whatsapp"></i> Enviar Pedido
-                </button>
-            </div>
+<div id="confirm-modal" class="modal">
+    <div class="modal-content">
+        <h3>Confirmar Pedido</h3>
+        <div id="order-details" style="margin: 15px 0;"></div>
+        <hr>
+        <div style="margin: 15px 0;">
+            <label>¿A cuántos KM estás del negocio?</label>
+            <input type="number" id="distancia" placeholder="Ej: 5" style="width: 100%; padding: 8px;">
         </div>
+        <div id="final-prices" style="font-weight: bold; background: #f9f9f9; padding: 10px;"></div>
+        <button class="btn-order" onclick="sendWhatsApp()">Enviar a WhatsApp</button>
+        <button onclick="closeModal()" style="margin-top: 10px; border: none; background: none; color: red; cursor: pointer; width: 100%;">Cancelar</button>
     </div>
+</div>
 
-    <section id="about" class="container mx-auto p-8 mt-10 bg-white rounded shadow">
-        <h3 class="text-xl font-bold mb-4">Acerca de esta web</h3>
-        <p class="text-gray-700">Analista, diseñador y desarrollador de sistemas de información computarizados.</p>
-        <p class="font-bold text-lg mt-2">Antonio Itriago</p>
-        <hr class="my-4">
-        <p class="text-sm">Contacto directo:</p>
-        <a href="https://wa.me/584122525407" class="text-blue-600 break-all">wa.me/584122525407</a>
-    </section>
+<div id="about-modal" class="modal">
+    <div class="modal-content">
+        <h3>Desarrollador</h3>
+        <p><strong>Antonio Itriago</strong></p>
+        <p>Analista, diseñador y desarrollador de sistemas de información computarizados.</p>
+        <p style="margin-top: 15px;">Contacto directo:</p>
+        <a href="https://wa.me/584122525407" target="_blank" style="text-decoration: none; color: #25d366; font-weight: bold;">wa.me/584122525407</a>
+        <button onclick="toggleAbout()" style="display: block; margin-top: 20px; padding: 10px; width: 100%;">Cerrar</button>
+    </div>
+</div>
 
-    <script>
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRsTRhoswf3zopWO5PEusQsYdYglnUlWTX9HzFIvewpy4vED9fQbs9Z0V3EdQ-AGMGLlpmcs_LL_cP3/pub?gid=0&single=true&output=tsv';
-        const WHATSAPP_NUMBER = "584122525407";
-        let carrito = [];
-        let tasaBCV = 0;
+<div class="info-section">
+    <p>Pepito's House 251 | Barquisimeto, Venezuela</p>
+    <p>Tasa BCV hoy: <span id="tasa-val">Cargando...</span></p>
+</div>
 
-        // 1. Obtener Tasa BCV
-        async function fetchTasa() {
-            try {
-                // Usando una API de referencia para el BCV
-                const res = await fetch('https://pydolarve.org/api/v1/dollar?page=bcv');
-                const data = await res.json();
-                tasaBCV = data.monitors.usd.price;
-            } catch (e) {
-                console.error("Error tasa", e);
-                tasaBCV = 50; // Valor fallback
-            }
+<div style="position: fixed; bottom: 20px; right: 20px;">
+    <button onclick="openConfirm()" id="floating-cart" style="background: var(--primary); color: white; border: none; padding: 15px 25px; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; display: none;">
+        Ver Pedido (<span id="cart-count">0</span>)
+    </button>
+</div>
+
+<script>
+    const TSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRsTRhoswf3zopWO5PEusQsYdYglnUlWTX9HzFIvewpy4vED9fQbs9Z0V3EdQ-AGMGLlpmcs_LL_cP3/pub?gid=0&single=true&output=tsv';
+    const WHATSAPP_NUM = "584122525407";
+    let tasaBCV = 344.51; // Backup
+    let products = [];
+    let cart = {};
+
+    // 1. Obtener Tasa BCV
+    async function fetchBCV() {
+        try {
+            const res = await fetch('https://ve.dolarapi.com/v1/dolares/oficial');
+            const data = await res.json();
+            tasaBCV = data.promedio;
+            document.getElementById('tasa-val').innerText = tasaBCV + " Bs.";
+        } catch (e) {
+            console.log("Usando tasa de respaldo");
+            document.getElementById('tasa-val').innerText = tasaBCV + " Bs. (Ref)";
         }
+    }
 
-        // 2. Cargar Datos de Google Sheets
-        async function cargarProductos() {
-            await fetchTasa();
-            const response = await fetch(SHEET_URL);
-            const text = await response.text();
-            const rows = text.split('\n').slice(1);
-            const container = document.getElementById('productos');
-            document.getElementById('loading').remove();
+    // 2. Cargar Productos desde Google Sheets (TSV)
+    async function loadProducts() {
+        try {
+            const response = await fetch(TSV_URL);
+            const data = await response.text();
+            const rows = data.split('\n').slice(1);
+            
+            const listEl = document.getElementById('product-list');
+            listEl.innerHTML = '';
 
             rows.forEach(row => {
-                const [id, name, price, currency, description, category] = row.split('\t');
-                if(!name) return;
+                const [id, name, price, currency, desc, cat] = row.split('\t');
+                if(!id) return;
+                
+                const product = { id, name, price: parseFloat(price.replace(',','.')), currency, desc };
+                products.push(product);
 
                 const card = document.createElement('div');
-                card.className = "bg-white p-4 rounded-xl shadow-md border-l-4 border-primary";
+                card.className = 'product-card';
                 card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <h3 class="font-bold text-lg">${name}</h3>
-                        <span class="bg-black text-primary px-2 py-1 rounded text-sm font-bold">$${price}</span>
+                    <h3>${name}</h3>
+                    <p style="font-size:0.7rem; color: #777;">${desc}</p>
+                    <p class="price">$${price}</p>
+                    <div class="qty-controls">
+                        <button class="btn-qty" onclick="updateQty('${id}', -1)">-</button>
+                        <span id="qty-${id}">0</span>
+                        <button class="btn-qty" onclick="updateQty('${id}', 1)">+</button>
                     </div>
-                    <p class="text-gray-500 text-sm my-2">${description || ''}</p>
-                    <button onclick="agregarAlCarrito('${id}', '${name}', ${price})" 
-                            class="w-full mt-2 bg-primary text-black font-bold py-2 rounded hover:bg-black hover:text-primary transition">
-                        + Agregar
-                    </button>
                 `;
-                container.appendChild(card);
+                listEl.appendChild(card);
             });
+        } catch (e) {
+            document.getElementById('product-list').innerHTML = "Error cargando productos.";
         }
+    }
 
-        // 3. Lógica del Carrito
-        function agregarAlCarrito(id, name, price) {
-            const index = carrito.findIndex(item => item.id === id);
-            if (index > -1) {
-                carrito[index].cantidad += 1;
-            } else {
-                carrito.push({ id, name, price, cantidad: 1 });
-            }
-            actualizarUI();
+    function updateQty(id, change) {
+        cart[id] = (cart[id] || 0) + change;
+        if(cart[id] <= 0) delete cart[id];
+        
+        document.getElementById(`qty-${id}`).innerText = cart[id] || 0;
+        
+        let totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
+        document.getElementById('floating-cart').style.display = totalItems > 0 ? 'block' : 'none';
+        document.getElementById('cart-count').innerText = totalItems;
+    }
+
+    function openConfirm() {
+        const orderDetails = document.getElementById('order-details');
+        let html = '<ul>';
+        let subtotalUSD = 0;
+
+        for(const id in cart) {
+            const p = products.find(x => x.id === id);
+            const cost = p.price * cart[id];
+            subtotalUSD += cost;
+            html += `<li>${cart[id]}x ${p.name} - $${cost.toFixed(2)}</li>`;
         }
+        html += '</ul>';
+        orderDetails.innerHTML = html;
+        
+        // Listener para recalcular con delivery
+        document.getElementById('distancia').oninput = () => {
+            const dist = parseFloat(document.getElementById('distancia').value) || 0;
+            const deliveryUSD = dist * 2;
+            const totalUSD = subtotalUSD + deliveryUSD;
+            const totalBS = totalUSD * tasaBCV;
 
-        function actualizarUI() {
-            const bar = document.getElementById('cart-bar');
-            const count = document.getElementById('cart-count');
-            const totalItems = carrito.reduce((acc, item) => acc + item.cantidad, 0);
-            
-            count.innerText = totalItems;
-            if (totalItems > 0) {
-                bar.classList.remove('translate-y-full');
-            } else {
-                bar.classList.add('translate-y-full');
-            }
-        }
-
-        function openModal() {
-            document.getElementById('modal').classList.remove('hidden');
-            calcularTotal();
-        }
-
-        function closeModal() {
-            document.getElementById('modal').classList.add('hidden');
-        }
-
-        function calcularTotal() {
-            const listContainer = document.getElementById('modal-items');
-            const resumenContainer = document.getElementById('resumen-costos');
-            const distancia = parseFloat(document.getElementById('distancia').value) || 0;
-            
-            let htmlItems = "";
-            let subtotal = 0;
-
-            carrito.forEach(item => {
-                const lineTotal = item.price * item.cantidad;
-                subtotal += lineTotal;
-                htmlItems += `<div class="flex justify-between text-sm">
-                    <span>${item.cantidad}x ${item.name}</span>
-                    <span>$${lineTotal.toFixed(2)}</span>
-                </div>`;
-            });
-
-            const costoEnvio = distancia * 2;
-            const totalUSD = subtotal + costoEnvio;
-            const totalVES = totalUSD * tasaBCV;
-
-            listContainer.innerHTML = htmlItems;
-            resumenContainer.innerHTML = `
-                <p class="text-sm text-gray-600">Subtotal: $${subtotal.toFixed(2)}</p>
-                <p class="text-sm text-gray-600">Delivery: $${costoEnvio.toFixed(2)}</p>
-                <p class="text-lg font-bold text-red-600">TOTAL: $${totalUSD.toFixed(2)}</p>
-                <p class="text-xl font-black text-green-700">TOTAL Bs: ${totalVES.toLocaleString('es-VE', {minimumFractionDigits: 2})}</p>
-                <p class="text-[10px] text-gray-400 mt-2 italic text-right">Tasa BCV: ${tasaBCV} Bs/$</p>
+            document.getElementById('final-prices').innerHTML = `
+                <p>Delivery: $${deliveryUSD.toFixed(2)}</p>
+                <p>TOTAL: $${totalUSD.toFixed(2)}</p>
+                <p>TOTAL Bs: ${totalBS.toLocaleString('es-VE', {minimumFractionDigits: 2})} (Tasa: ${tasaBCV})</p>
             `;
+        };
+        
+        document.getElementById('confirm-modal').style.display = 'flex';
+        document.getElementById('distancia').dispatchEvent(new Event('input'));
+    }
+
+    function sendWhatsApp() {
+        const dist = parseFloat(document.getElementById('distancia').value) || 0;
+        const deliveryUSD = dist * 2;
+        let subtotalUSD = 0;
+        let msg = "Hola Pepito's House! Mi pedido:\n\n";
+
+        for(const id in cart) {
+            const p = products.find(x => x.id === id);
+            msg += `• ${cart[id]}x ${p.name} ($${(p.price * cart[id]).toFixed(2)})\n`;
+            subtotalUSD += (p.price * cart[id]);
         }
 
-        // 4. Envío a WhatsApp
-        function enviarWhatsApp() {
-            let mensaje = `*NUEVO PEDIDO - PEPITO'S HOUSE*%0A---------------------------%0A`;
-            carrito.forEach(item => {
-                mensaje += `• ${item.cantidad}x ${item.name} ($${(item.price * item.cantidad).toFixed(2)})%0A`;
-            });
+        const totalUSD = subtotalUSD + deliveryUSD;
+        const totalBS = totalUSD * tasaBCV;
 
-            const distancia = document.getElementById('distancia').value;
-            const subtotal = carrito.reduce((acc, item) => acc + (item.price * item.cantidad), 0);
-            const envio = distancia * 2;
-            const totalUSD = subtotal + envio;
-            const totalVES = totalUSD * tasaBCV;
+        msg += `\n🛵 Delivery: $${deliveryUSD.toFixed(2)}`;
+        msg += `\n💰 *TOTAL: $${totalUSD.toFixed(2)}*`;
+        msg += `\n🇻🇪 *TOTAL Bs: ${totalBS.toLocaleString('es-VE', {minimumFractionDigits: 2})}*`;
+        msg += `\n(Tasa BCV: ${tasaBCV})`;
 
-            mensaje += `---------------------------%0A`;
-            mensaje += `*Subtotal:* $${subtotal.toFixed(2)}%0A`;
-            mensaje += `*Delivery (${distancia}km):* $${envio.toFixed(2)}%0A`;
-            mensaje += `*TOTAL:* $${totalUSD.toFixed(2)}%0A`;
-            mensaje += `*TOTAL Bs:* ${totalVES.toLocaleString('es-VE')}%0A`;
-            mensaje += `*Tasa aplicada:* ${tasaBCV}%0A`;
-            mensaje += `---------------------------%0A_Por favor confirmar disponibilidad y tiempo de entrega._`;
+        window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(msg)}`);
+    }
 
-            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${mensaje}`, '_blank');
-        }
+    function closeModal() { document.getElementById('confirm-modal').style.display = 'none'; }
+    function toggleAbout() { 
+        const el = document.getElementById('about-modal');
+        el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
+    }
 
-        cargarProductos();
-    </script>
+    window.onload = () => {
+        fetchBCV();
+        loadProducts();
+    };
+</script>
+
 </body>
 </html>
